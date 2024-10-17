@@ -27,11 +27,16 @@ fn main() {
 fn handle_connection(mut stream: TcpStream) {
     loop {
         let mut buffer = match read_bytes(&mut stream) {
-            Some(value) => value,
-            None => return,
-        };
+            Ok(mut buffer) => {
+                if buffer.len() == 0 {
+                    return;
+                }
 
-        buffer.pop();
+                buffer.pop();
+                buffer
+            }
+            _ => return,
+        };
 
         let parsed = str::from_utf8(&buffer).unwrap();
         println!("{}", parsed);
@@ -43,21 +48,11 @@ fn handle_connection(mut stream: TcpStream) {
     }
 }
 
-fn read_bytes(stream: &mut TcpStream) -> Option<Vec<u8>> {
+fn read_bytes(stream: &mut TcpStream) -> Result<Vec<u8>, std::io::Error> {
     let mut buf_reader = BufReader::new(stream);
-    let mut buffer = vec![];
-    let result_of_reading = buf_reader.read_until(b'@', &mut buffer);
-
-    match result_of_reading {
-        Ok(size) => {
-            if size == 0 {
-                return None;
-            }
-        }
-        _ => return None,
-    }
-
-    Some(buffer)
+    let mut result = vec![];
+    buf_reader.read_until(b'@', &mut result)?;
+    Ok(result)
 }
 
 fn write_string(stream: &mut TcpStream, parsed: &str) -> Result<(), std::io::Error> {
