@@ -26,7 +26,7 @@ fn main() {
 
 fn handle_connection(mut stream: TcpStream) {
     loop {
-        let mut buffer = match read_bytes(&mut stream) {
+        let buffer = match read_bytes(&mut stream) {
             Ok(mut buffer) => {
                 if buffer.len() == 0 {
                     return;
