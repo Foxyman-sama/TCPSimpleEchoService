@@ -2,10 +2,11 @@
 // Обработку обмена информацией с каждым клиентом реализовать в отдельном потоке.
 // В журнал событий записывать данные о подключении и отключении клиентов.
 
+use core::str;
 use std::{
     env,
     fmt::format,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, BufWriter, Read, Write},
     net::{TcpListener, TcpStream},
 };
 
@@ -24,12 +25,32 @@ fn main() {
 }
 
 fn handle_connection(mut stream: TcpStream) {
-    let buf_reader = BufReader::new(&mut stream);
-    let http_request: Vec<_> = buf_reader
-        .lines()
-        .map(|result| result.unwrap())
-        .take_while(|line| !line.is_empty())
-        .collect();
+    loop {
+        let mut buf_reader = BufReader::new(&mut stream);
+        let mut buffer = vec![];
+        let result_of_reading = buf_reader.read_until(b'@', &mut buffer);
 
-    println!("Request: {http_request:#?}");
+        match result_of_reading {
+            Ok(size) => {
+                if size == 0 {
+                    return;
+                }
+            }
+            _ => return,
+        }
+
+        buffer.pop();
+
+        let parsed = str::from_utf8(&buffer).unwrap();
+        println!("{}", parsed);
+
+        let mut buf_writer = BufWriter::new(&mut stream);
+        let answer = format!("Your answer: {}\n", parsed);
+        let result_of_writing = buf_writer.write_all(answer.as_bytes());
+
+        match result_of_writing {
+            Ok(size) => (),
+            _ => return,
+        }
+    }
 }
