@@ -24,15 +24,19 @@ fn main() {
   for stream in listener.incoming() {
     let stream = stream.unwrap();
 
-    let connection_ip = stream.peer_addr().unwrap().to_string();
-    let current_time = chrono::Utc::now();
-    let record = format!("User [{}] connected at {:?}\n", connection_ip, current_time);
-    file.write_all(record.as_bytes());
+    log_event(&stream, &mut file, "connected");
 
     std::thread::spawn(move || {
       handle_connection(stream);
     });
   }
+}
+
+fn log_event(stream: &TcpStream, file: &mut fs::File, status: &str) {
+  let connection_ip = stream.peer_addr().unwrap().to_string();
+  let current_time = chrono::Utc::now();
+  let record = format!("User [{}] {} at {:?}\n", connection_ip, status, current_time);
+  let _ = file.write_all(record.as_bytes());
 }
 
 fn handle_connection(mut stream: TcpStream) {
