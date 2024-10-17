@@ -19,38 +19,41 @@ fn main() {
   let port = args.get(1).unwrap();
   let addr = format!("localhost:{}", port);
   let listener = TcpListener::bind(addr).unwrap();
-  let mut file = fs::File::create(LOG_FILENAME).unwrap();
+
+  let _ = fs::File::create_new(LOG_FILENAME);
 
   for stream in listener.incoming() {
     let stream = stream.unwrap();
 
-    log_event(&stream, &mut file, "connected");
+    log_event(&stream, "connected");
 
     std::thread::spawn(move || {
-      handle_connection(stream);
+      let stream = handle_connection(stream);
+      log_event(&stream, "disconnected");
     });
   }
 }
 
-fn log_event(stream: &TcpStream, file: &mut fs::File, status: &str) {
+fn log_event(stream: &TcpStream, status: &str) {
+  let mut file = fs::File::options().write(true).append(true).open(LOG_FILENAME).unwrap();
   let connection_ip = stream.peer_addr().unwrap().to_string();
   let current_time = chrono::Utc::now();
   let record = format!("User [{}] {} at {:?}\n", connection_ip, status, current_time);
   let _ = file.write_all(record.as_bytes());
 }
 
-fn handle_connection(mut stream: TcpStream) {
+fn handle_connection(mut stream: TcpStream) -> TcpStream {
   loop {
     let buffer = match read_bytes(&mut stream) {
       Ok(mut buffer) => {
         if buffer.len() == 0 {
-          return;
+          break;
         }
 
         buffer.pop();
         buffer
       }
-      _ => return,
+      _ => break,
     };
 
     let parsed = str::from_utf8(&buffer).unwrap();
@@ -58,9 +61,11 @@ fn handle_connection(mut stream: TcpStream) {
 
     match write_string(&mut stream, parsed) {
       Ok(_) => (),
-      _ => return,
+      _ => break,
     }
   }
+
+  stream
 }
 
 fn read_bytes(stream: &mut TcpStream) -> Result<Vec<u8>, std::io::Error> {
