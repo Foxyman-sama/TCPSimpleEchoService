@@ -2,14 +2,11 @@
 // Обработку обмена информацией с каждым клиентом реализовать в отдельном потоке.
 // В журнал событий записывать данные о подключении и отключении клиентов.
 
-use core::{fmt, str};
+use core::str;
 use std::{
-  env,
-  fmt::{format, Error},
-  fs,
-  io::{BufRead, BufReader, BufWriter, Read, Write},
+  env, fs,
+  io::{BufRead, BufReader, BufWriter, Write},
   net::{TcpListener, TcpStream},
-  time::SystemTime,
 };
 
 const LOG_FILENAME: &'static str = "log.txt";
