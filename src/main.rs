@@ -2,10 +2,10 @@
 // Обработку обмена информацией с каждым клиентом реализовать в отдельном потоке.
 // В журнал событий записывать данные о подключении и отключении клиентов.
 
-use core::str;
+use core::{fmt, str};
 use std::{
     env,
-    fmt::format,
+    fmt::{format, Error},
     io::{BufRead, BufReader, BufWriter, Read, Write},
     net::{TcpListener, TcpStream},
 };
@@ -26,31 +26,42 @@ fn main() {
 
 fn handle_connection(mut stream: TcpStream) {
     loop {
-        let mut buf_reader = BufReader::new(&mut stream);
-        let mut buffer = vec![];
-        let result_of_reading = buf_reader.read_until(b'@', &mut buffer);
-
-        match result_of_reading {
-            Ok(size) => {
-                if size == 0 {
-                    return;
-                }
-            }
-            _ => return,
-        }
+        let mut buffer = match read_bytes(&mut stream) {
+            Some(value) => value,
+            None => return,
+        };
 
         buffer.pop();
 
         let parsed = str::from_utf8(&buffer).unwrap();
         println!("{}", parsed);
 
-        let mut buf_writer = BufWriter::new(&mut stream);
-        let answer = format!("Your answer: {}\n", parsed);
-        let result_of_writing = buf_writer.write_all(answer.as_bytes());
-
-        match result_of_writing {
-            Ok(size) => (),
+        match write_string(&mut stream, parsed) {
+            Ok(_) => (),
             _ => return,
         }
     }
+}
+
+fn read_bytes(stream: &mut TcpStream) -> Option<Vec<u8>> {
+    let mut buf_reader = BufReader::new(stream);
+    let mut buffer = vec![];
+    let result_of_reading = buf_reader.read_until(b'@', &mut buffer);
+
+    match result_of_reading {
+        Ok(size) => {
+            if size == 0 {
+                return None;
+            }
+        }
+        _ => return None,
+    }
+
+    Some(buffer)
+}
+
+fn write_string(stream: &mut TcpStream, parsed: &str) -> Result<(), std::io::Error> {
+    let mut buf_writer = BufWriter::new(stream);
+    let responce = format!("Your request: {}\n", parsed);
+    buf_writer.write_all(responce.as_bytes())
 }
