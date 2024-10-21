@@ -1,8 +1,7 @@
 use core::str;
 use std::{
-  env, fs,
   io::{BufRead, BufReader, BufWriter, Write},
-  net::{TcpListener, TcpStream},
+  net::TcpStream,
 };
 
 pub fn read_bytes(stream: &mut TcpStream) -> Result<Vec<u8>, std::io::Error> {

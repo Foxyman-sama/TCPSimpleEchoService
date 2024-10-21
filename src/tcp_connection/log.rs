@@ -1,9 +1,5 @@
 use core::str;
-use std::{
-  env, fs,
-  io::{BufRead, BufReader, BufWriter, Write},
-  net::{TcpListener, TcpStream},
-};
+use std::{fs, io::Write, net::TcpStream};
 
 const LOG_FILENAME: &'static str = "log.txt";
 

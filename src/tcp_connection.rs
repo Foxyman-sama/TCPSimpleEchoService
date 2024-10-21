@@ -1,7 +1,6 @@
 use core::str;
 use std::{
-  env, fs,
-  io::{BufRead, BufReader, BufWriter, Write},
+  env,
   net::{TcpListener, TcpStream},
 };
 
@@ -44,18 +43,18 @@ fn create_io_thread(stream: TcpStream) {
 
 fn handle_io(mut stream: TcpStream) -> TcpStream {
   loop {
-    let buffer = match tcp_io::read_bytes(&mut stream) {
-      Ok(mut buffer) => {
+    let mut buffer = match tcp_io::read_bytes(&mut stream) {
+      Ok(buffer) => {
         if buffer.len() == 0 {
           break;
         }
 
-        buffer.pop();
         buffer
       }
       _ => break,
     };
 
+    buffer.pop();
     let parsed = str::from_utf8(&buffer).unwrap();
     println!("{}", parsed);
 
