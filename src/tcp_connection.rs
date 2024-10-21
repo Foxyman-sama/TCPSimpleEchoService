@@ -43,25 +43,16 @@ fn create_io_thread(stream: TcpStream) {
 
 fn handle_io(mut stream: TcpStream) -> TcpStream {
   loop {
-    let mut buffer = match tcp_io::read_bytes(&mut stream) {
-      Ok(buffer) => {
-        if buffer.len() == 0 {
-          break;
-        }
-
-        buffer
-      }
-      _ => break,
-    };
+    let mut buffer = tcp_io::read_bytes(&mut stream);
+    if (buffer.len() == 0) {
+      break;
+    }
 
     buffer.pop();
     let parsed = str::from_utf8(&buffer).unwrap();
     println!("{}", parsed);
 
-    match tcp_io::write_string(&mut stream, parsed) {
-      Ok(_) => (),
-      _ => break,
-    }
+    tcp_io::write_string(&stream, parsed);
   }
 
   stream

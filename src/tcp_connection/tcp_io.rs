@@ -4,15 +4,15 @@ use std::{
   net::TcpStream,
 };
 
-pub fn read_bytes(stream: &mut TcpStream) -> Result<Vec<u8>, std::io::Error> {
+pub fn read_bytes(stream: &mut TcpStream) -> Vec<u8> {
   let mut buf_reader = BufReader::new(stream);
   let mut result = vec![];
-  buf_reader.read_until(b'@', &mut result)?;
-  Ok(result)
+  let _ = buf_reader.read_until(b'@', &mut result);
+  result
 }
 
-pub fn write_string(stream: &mut TcpStream, parsed: &str) -> Result<(), std::io::Error> {
+pub fn write_string(stream: &TcpStream, parsed: &str) {
   let mut buf_writer = BufWriter::new(stream);
   let responce = format!("Your request: {}@", parsed);
-  buf_writer.write_all(responce.as_bytes())
+  let _ = buf_writer.write_all(responce.as_bytes());
 }
