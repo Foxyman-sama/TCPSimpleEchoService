@@ -11,8 +11,7 @@ pub fn read_bytes(stream: &mut TcpStream) -> Vec<u8> {
   result
 }
 
-pub fn write_string(stream: &TcpStream, parsed: &str) {
+pub fn write_string(stream: &TcpStream, parsed: &[u8]) {
   let mut buf_writer = BufWriter::new(stream);
-  let responce = format!("Your request: {}@", parsed);
-  let _ = buf_writer.write_all(responce.as_bytes());
+  let _ = buf_writer.write_all(parsed);
 }

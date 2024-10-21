@@ -1,4 +1,3 @@
-use core::str;
 use std::{
   env,
   net::{TcpListener, TcpStream},
@@ -43,16 +42,12 @@ fn create_io_thread(stream: TcpStream) {
 
 fn handle_io(mut stream: TcpStream) -> TcpStream {
   loop {
-    let mut buffer = tcp_io::read_bytes(&mut stream);
-    if (buffer.len() == 0) {
+    let buffer = tcp_io::read_bytes(&mut stream);
+    if buffer.len() == 0 {
       break;
     }
 
-    buffer.pop();
-    let parsed = str::from_utf8(&buffer).unwrap();
-    println!("{}", parsed);
-
-    tcp_io::write_string(&stream, parsed);
+    tcp_io::write_string(&stream, &buffer);
   }
 
   stream
