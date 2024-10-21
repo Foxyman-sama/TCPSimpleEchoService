@@ -10,19 +10,8 @@ mod tcp_io;
 
 pub fn start_handling_connection() {
   let listener = create_listener();
-
   log::create_file();
-
-  for stream in listener.incoming() {
-    let stream = stream.unwrap();
-
-    log::log_event(&stream, "connected");
-
-    std::thread::spawn(move || {
-      let stream = handle_connection(stream);
-      log::log_event(&stream, "disconnected");
-    });
-  }
+  listen(listener);
 }
 
 fn create_listener() -> TcpListener {
@@ -35,7 +24,25 @@ fn make_address() -> String {
   format!("localhost:{}", port)
 }
 
-pub fn handle_connection(mut stream: TcpStream) -> TcpStream {
+fn listen(listener: TcpListener) {
+  for stream in listener.incoming() {
+    handle_connection(stream.unwrap());
+  }
+}
+
+fn handle_connection(stream: TcpStream) {
+  log::log_event(&stream, "connected");
+  create_io_thread(stream);
+}
+
+fn create_io_thread(stream: TcpStream) {
+  std::thread::spawn(move || {
+    let stream = handle_io(stream);
+    log::log_event(&stream, "disconnected");
+  });
+}
+
+fn handle_io(mut stream: TcpStream) -> TcpStream {
   loop {
     let buffer = match tcp_io::read_bytes(&mut stream) {
       Ok(mut buffer) => {
