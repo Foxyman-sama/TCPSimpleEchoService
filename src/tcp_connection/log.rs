@@ -8,9 +8,16 @@ pub fn create_file() {
 }
 
 pub fn log_event(stream: &TcpStream, status: &str) {
-  let mut file = fs::File::options().write(true).append(true).open(LOG_FILENAME).unwrap();
+  let mut file = open_file();
+  let _ = file.write_all(format_string(stream, status).as_bytes());
+}
+
+fn open_file() -> fs::File {
+  fs::File::options().write(true).append(true).open(LOG_FILENAME).unwrap()
+}
+
+fn format_string(stream: &TcpStream, status: &str) -> String {
   let connection_ip = stream.peer_addr().unwrap().to_string();
-  let current_time = chrono::Utc::now();
-  let record = format!("User [{}] {} at {:?}\n", connection_ip, status, current_time);
-  let _ = file.write_all(record.as_bytes());
+  let current_time = chrono::Local::now();
+  format!("User [{}] {} at {:?}\n", connection_ip, status, current_time)
 }
